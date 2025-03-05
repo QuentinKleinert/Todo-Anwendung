@@ -2,18 +2,23 @@ import React, { useState } from "react";
 
 const TodoList = () => {
     const [entries, setEntries] = useState<
-        { task: string; text: string; completed: boolean }[]
+        { task: string; text: string; completed: boolean; isEditing: boolean }[]
     >([]);
     const [newTask, setNewTask] = useState("");
     const [newText, setNewText] = useState("");
 
     const addEntry = (event: React.FormEvent) => {
-        event.preventDefault(); // Verhindert das Neuladen der Seite
+        event.preventDefault();
 
         if (newTask.trim() && newText.trim()) {
             setEntries([
                 ...entries,
-                { task: newTask, text: newText, completed: false },
+                {
+                    task: newTask,
+                    text: newText,
+                    completed: false,
+                    isEditing: false,
+                },
             ]);
             setNewTask("");
             setNewText("");
@@ -30,6 +35,48 @@ const TodoList = () => {
 
     const deleteEntry = (index: number) => {
         setEntries(entries.filter((_, i) => i !== index));
+    };
+
+    const startEditing = (index: number) => {
+        setEntries(
+            entries.map((entry, i) =>
+                i === index ? { ...entry, isEditing: true } : entry
+            )
+        );
+    };
+
+    const saveEdit = (index: number, newTask: string, newText: string) => {
+        setEntries(
+            entries.map((entry, i) =>
+                i === index
+                    ? {
+                          ...entry,
+                          task: newTask,
+                          text: newText,
+                          isEditing: false,
+                      }
+                    : entry
+            )
+        );
+    };
+
+    const moveEntry = (index: number, direction: "up" | "down") => {
+        const newEntries = [...entries];
+
+        if (direction === "up" && index > 0) {
+            [newEntries[index], newEntries[index - 1]] = [
+                newEntries[index - 1],
+                newEntries[index],
+            ];
+        }
+        if (direction === "down" && index < newEntries.length - 1) {
+            [newEntries[index], newEntries[index + 1]] = [
+                newEntries[index + 1],
+                newEntries[index],
+            ];
+        }
+
+        setEntries(newEntries);
     };
 
     const saveTasksToBackend = async () => {
@@ -90,21 +137,54 @@ const TodoList = () => {
                     Add
                 </button>
             </form>
+
             <ul className="list-group mt-3">
                 {entries.map((entry, index) => (
                     <li
                         key={index}
                         className="list-group-item d-flex justify-content-between align-items-center"
                     >
-                        <span
-                            style={{
-                                textDecoration: entry.completed
-                                    ? "line-through"
-                                    : "none",
-                            }}
-                        >
-                            <strong>{entry.task}:</strong> {entry.text}
-                        </span>
+                        {entry.isEditing ? (
+                            // Bearbeitungsmodus
+                            <div className="d-flex flex-column">
+                                <input
+                                    type="text"
+                                    className="form-control mb-2"
+                                    defaultValue={entry.task}
+                                    onChange={(e) =>
+                                        (entry.task = e.target.value)
+                                    }
+                                />
+                                <input
+                                    type="text"
+                                    className="form-control mb-2"
+                                    defaultValue={entry.text}
+                                    onChange={(e) =>
+                                        (entry.text = e.target.value)
+                                    }
+                                />
+                                <button
+                                    className="btn btn-success btn-sm"
+                                    onClick={() =>
+                                        saveEdit(index, entry.task, entry.text)
+                                    }
+                                >
+                                    Speichern
+                                </button>
+                            </div>
+                        ) : (
+                            // Normalansicht
+                            <span
+                                style={{
+                                    textDecoration: entry.completed
+                                        ? "line-through"
+                                        : "none",
+                                }}
+                            >
+                                <strong>{entry.task}:</strong> {entry.text}
+                            </span>
+                        )}
+
                         <div className="d-flex align-items-center">
                             <input
                                 type="checkbox"
@@ -115,12 +195,37 @@ const TodoList = () => {
                             <span className="me-3">
                                 {entry.completed ? "Fertig" : "Offen"}
                             </span>
-                            <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => deleteEntry(index)}
-                            >
-                                Löschen
-                            </button>
+
+                            {!entry.isEditing && (
+                                <>
+                                    <button
+                                        className="btn btn-warning btn-sm me-2"
+                                        onClick={() => startEditing(index)}
+                                    >
+                                        Bearbeiten
+                                    </button>
+                                    <button
+                                        className="btn btn-danger btn-sm me-2"
+                                        onClick={() => deleteEntry(index)}
+                                    >
+                                        Löschen
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary btn-sm me-2"
+                                        disabled={index === 0}
+                                        onClick={() => moveEntry(index, "up")}
+                                    >
+                                        ↑
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary btn-sm"
+                                        disabled={index === entries.length - 1}
+                                        onClick={() => moveEntry(index, "down")}
+                                    >
+                                        ↓
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </li>
                 ))}
