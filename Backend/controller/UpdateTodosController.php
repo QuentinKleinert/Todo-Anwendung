@@ -22,9 +22,6 @@
                 exit;
             }
 
-            var_dump($data); 
-
-
             if (!isset($data["name"]) || !isset($data["todos"])) {
                 http_response_code(400);
                 echo json_encode(["status" => "error", "message" => "Fehlende Daten"]);
@@ -39,9 +36,11 @@
             if ($result) {
                 http_response_code(200);
                 echo json_encode(["status" => "success", "message" => "Todos erfolgreich aktualisiert"]);
+                exit;
             } else {
                 http_response_code(500);
                 echo json_encode(["status" => "error", "message" => "Fehler beim Aktualisieren der Todos"]);
+                exit;
             }
         }
     }

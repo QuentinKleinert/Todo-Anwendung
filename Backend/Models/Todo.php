@@ -23,31 +23,34 @@
             $conn = $db->getConnection();
 
             try {
-                // Alte Todos löschen
+                $conn->beginTransaction();
+
                 $query_delete = "DELETE FROM todos WHERE user_name = :name";
                 $stmt = $conn->prepare($query_delete);
                 $stmt->bindParam(':name', $name, PDO::PARAM_STR);
                 $stmt->execute();
 
                 if (!empty($todos)) {
-                    $stmt = $conn->prepare("INSERT INTO todos (user_name, title, text, completed) VALUES (:name, :title, :text, :completed)");
-                    
+                    $query_insert = "INSERT INTO todos (user_name, title, text, completed) VALUES (:name, :title, :text, :completed)";
+                    $stmt = $conn->prepare($query_insert);
+
                     foreach ($todos as $task) {
-                        $stmt->execute([
-                            'name'      => $name,  // Hier war ein Fehler: 'username' -> 'name'
-                            'title'     => $task['title'],
-                            'text'      => $task['text'],
-                            'completed' => (int)$task['completed']
-                        ]);
+                        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+                        $stmt->bindParam(':title', $task['title'], PDO::PARAM_STR);
+                        $stmt->bindParam(':text', $task['text'], PDO::PARAM_STR);
+                        $stmt->bindParam(':completed', $task['completed'], PDO::PARAM_INT);
+                        $stmt->execute();
                     }
                 }
+
+                $conn->commit();
                 return true;
+
             } catch (Exception $e) {
+                $conn->rollBack();
                 error_log("Fehler beim Update: " . $e->getMessage());
                 return false;
             }
         }
-
-
     }
 ?>
