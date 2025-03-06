@@ -39,6 +39,7 @@ const Register = () => {
     const [responseMessage, setResponseMessage] = useState("");
 
     const onSubmit = async (data: RegisterData) => {
+        //Senden ans Backend
         try {
             const response = await fetch("/api/index.php?endpoint=register", {
                 method: "POST",
@@ -52,15 +53,18 @@ const Register = () => {
             });
 
             const text = await response.text();
-            console.log("Response Text:", text);
+            console.log("Raw Response Text:", text);
 
             try {
                 const result = JSON.parse(text);
-                console.log("Parsed JSON", result);
-                setResponseMessage("Erfolgreich registriert.");
+                if (result.status === "success") {
+                    setResponseMessage(result.message);
+                } else {
+                    setResponseMessage("Fehler: " + result.message);
+                }
             } catch (jsonError) {
                 console.log("JSON Parsing Fehler:", jsonError);
-                setResponseMessage("Fehler beim verarbeiten der Antwort");
+                setResponseMessage("Fehler beim Verarbeiten der Antwort");
             }
         } catch (error) {
             console.error("Fehler:", error);

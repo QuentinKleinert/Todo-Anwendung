@@ -1,11 +1,54 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const TodoList = () => {
+    const { username } = useParams<{ username?: string }>();
+    const storedUser = localStorage.getItem("user");
+    const finalUsername = username || storedUser;
     const [entries, setEntries] = useState<
-        { task: string; text: string; completed: boolean; isEditing: boolean }[]
+        {
+            title: string;
+            text: string;
+            completed: boolean;
+            isEditing: boolean;
+        }[]
     >([]);
     const [newTask, setNewTask] = useState("");
     const [newText, setNewText] = useState("");
+
+    useEffect(() => {
+        const fetchTodos = async () => {
+            if (!finalUsername) return;
+
+            try {
+                const response = await fetch(
+                    "/api/index.php?endpoint=getTodos",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ name: finalUsername }),
+                    }
+                );
+
+                const data = await response.json();
+                console.log("Empfangene Todos:", data);
+
+                if (data.status === "success") {
+                    setEntries(data.tasks);
+                    console.log("Gespeicherte Todos im State:", data.tasks);
+                } else {
+                    console.warn("Keine Todos gefunden für diesen Benutzer.");
+                    setEntries([]);
+                }
+            } catch (error) {
+                console.error("Fehler beim Abrufen der Todos:", error);
+            }
+        };
+
+        fetchTodos();
+    }, [finalUsername]);
 
     const addEntry = (event: React.FormEvent) => {
         event.preventDefault();
@@ -14,7 +57,7 @@ const TodoList = () => {
             setEntries([
                 ...entries,
                 {
-                    task: newTask,
+                    title: newTask,
                     text: newText,
                     completed: false,
                     isEditing: false,
@@ -51,7 +94,7 @@ const TodoList = () => {
                 i === index
                     ? {
                           ...entry,
-                          task: newTask,
+                          title: newTask,
                           text: newText,
                           isEditing: false,
                       }
@@ -112,6 +155,7 @@ const TodoList = () => {
 
     return (
         <div className="container mt-5">
+            <h2>{finalUsername}'s Todo-Liste</h2>
             <form onSubmit={addEntry}>
                 <div className="mb-3">
                     <label>Hinzufügen einer Task:</label>
@@ -150,9 +194,9 @@ const TodoList = () => {
                                 <input
                                     type="text"
                                     className="form-control mb-2"
-                                    defaultValue={entry.task}
+                                    defaultValue={entry.title}
                                     onChange={(e) =>
-                                        (entry.task = e.target.value)
+                                        (entry.title = e.target.value)
                                     }
                                 />
                                 <input
@@ -166,7 +210,7 @@ const TodoList = () => {
                                 <button
                                     className="btn btn-success btn-sm"
                                     onClick={() =>
-                                        saveEdit(index, entry.task, entry.text)
+                                        saveEdit(index, entry.title, entry.text)
                                     }
                                 >
                                     Speichern
@@ -181,7 +225,7 @@ const TodoList = () => {
                                         : "none",
                                 }}
                             >
-                                <strong>{entry.task}:</strong> {entry.text}
+                                <strong>{entry.title}:</strong> {entry.text}
                             </span>
                         )}
 

@@ -9,6 +9,8 @@
     class UserLoginController{
         
         public function loginUser() {
+            ob_clean();
+
             $data = json_decode(file_get_contents("php://input"), true);
                 if(!isset($data["name"]) || !isset($data["password"])) {
                 echo json_encode(["status" => "error", "message" => "Fehlende Daten"]);
@@ -20,9 +22,12 @@
             $password = $data["password"];
             $res = User::login($name, $password);
             if ($res) {
-                echo json_encode(["status" => "success", "message" => "Login erfogreich"]);
+                session_start();
+                echo json_encode(["status" => "success", "message" => "Login erfogreich", "name" => $name]);
+                exit;
             } else {
                 echo json_encode(["status" => "error", "message" => "Login fehlgeschlagen."]);
+                exit;
             }
 
         }

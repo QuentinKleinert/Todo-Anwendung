@@ -19,7 +19,10 @@ function App() {
         <Router>
             <Routes>
                 <Route path="/" element={<Home />}></Route>
-                <Route path="/Todolist" element={<TodoList />}></Route>
+                <Route
+                    path="/TodoList/:username"
+                    element={<TodoList />}
+                ></Route>
             </Routes>
         </Router>
     );

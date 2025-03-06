@@ -34,7 +34,7 @@ header("Access-Control-Allow-Headers: Content-Type");
             $stmt_data->execute();
             $users = $stmt_data->fetchAll(PDO::FETCH_ASSOC);
             foreach ($users as $user) {
-                if($users["name"] === $name) {
+                if($user["name"] === $name) {
                     return -2;
                 }
             }
@@ -59,16 +59,15 @@ header("Access-Control-Allow-Headers: Content-Type");
             $db = new Database();
             $conn = $db->getConnection();
 
-            $query_data = "SELECT * FROM users";
+            $query_data = "SELECT * FROM users WHERE name = :name AND password = :password";
             $stmt = $conn->prepare($query_data);
+            $stmt->bindParam(':name', $name);
+            $stmt->bindParam(':password', $password);
             $stmt->execute();
-            $users = $stmt->fetchAll();
-            foreach ($users as $user) {
-                if($users["name"] === $name && $users["password"] === $password) {
-                    return true;
-                }
-            }
-            return false;
+            
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user !== false;
         }
+
     }
 ?>

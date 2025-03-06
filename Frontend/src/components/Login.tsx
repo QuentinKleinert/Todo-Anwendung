@@ -19,10 +19,7 @@ const Login = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    name: data.name,
-                    password: data.password,
-                }),
+                body: JSON.stringify(data),
             });
 
             const text = await response.text();
@@ -30,10 +27,11 @@ const Login = () => {
 
             try {
                 const result = JSON.parse(text);
-                if (result.success) {
+                if (result.status === "success") {
+                    localStorage.setItem("user", result.name);
                     setResponseMessage("Login erfolgreich.");
                     setTimeout(() => {
-                        navigate("/Todolist");
+                        navigate(`/TodoList/${result.name}`);
                     }, 1000);
                 } else {
                     setResponseMessage(
@@ -57,11 +55,11 @@ const Login = () => {
             <h2>Login</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="mb-3">
-                    <label htmlFor="name" className="form-label">
+                    <label htmlFor="loginname" className="form-label">
                         Name
                     </label>
                     <input
-                        id="name"
+                        id="loginname"
                         type="text"
                         className="form-control"
                         {...register("name")}
@@ -69,11 +67,11 @@ const Login = () => {
                 </div>
 
                 <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
+                    <label htmlFor="loginpassword" className="form-label">
                         Passwort
                     </label>
                     <input
-                        id="password"
+                        id="loginpassword"
                         type="password"
                         className="form-control"
                         {...register("password")}

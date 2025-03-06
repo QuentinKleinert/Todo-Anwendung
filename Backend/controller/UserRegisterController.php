@@ -9,7 +9,8 @@
     class UserRegisterController {
         
         public function registerUser() {
-            header("Content-Type: application/json");
+
+            ob_clean(); 
 
             $data = json_decode(file_get_contents("php://input"), true);
                 if(!isset($data["name"]) || !isset($data["password"])) {
@@ -23,11 +24,17 @@
 
             $res = User::register($name, $password);
             if ($res == -2) {
-                echo json_encode(["status"=> "error","message"=> "Name bereits vorhanden."]);
-            } elseif ($res == -0) {
-                echo json_encode(["status"=> "success","message"=> "Erfolgreich registriert."]);
+                http_response_code(409); // Konflikt, Benutzername existiert bereits
+                echo json_encode(["status" => "error", "message" => "Name bereits vorhanden."]);
+                exit;
+            } elseif ($res == 0) {
+                http_response_code(201); // Erfolgreich erstellt
+                echo json_encode(["status" => "success", "message" => "Erfolgreich registriert."]);
+                exit;
             } else {
-                echo json_encode(["status"=> "error","message"=> "Error beim registrieren."]);
+                http_response_code(500); // Interner Serverfehler
+                echo json_encode(["status" => "error", "message" => "Fehler beim Registrieren."]);
+                exit;
             }
         }
     }

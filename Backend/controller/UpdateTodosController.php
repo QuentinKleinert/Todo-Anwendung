@@ -11,7 +11,8 @@
 
     class UpdateTodosController {
         
-        public function updateTodos() {
+        public function updateTodos() {#
+            ob_clean();
             $data = json_decode(file_get_contents("php://input"), true);
 
 
