@@ -16,13 +16,17 @@ CREATE TABLE todos (
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) NOT NULL,
+    user_name VARCHAR(255) NOT NULL,
+    UNIQUE(name, user_name), 
+    FOREIGN KEY (user_name) REFERENCES users(name) ON DELETE CASCADE
 );
 
 CREATE TABLE todo_categories (
-    todo_id INT NOT NULL,
-    category_id INT NOT NULL,
+    todo_id BIGINT UNSIGNED NOT NULL,
+    category_id BIGINT UNSIGNED NOT NULL,
     PRIMARY KEY (todo_id, category_id),
     FOREIGN KEY (todo_id) REFERENCES todos(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
+
